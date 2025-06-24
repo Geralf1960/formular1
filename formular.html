@@ -81,7 +81,7 @@
 
     async function ladeUploadLinks() {
       try {
-        const response = await fetch('Empfaenger-Upload-Links.csv');
+        const response = await fetch('Empfaenger-Upload-Links.xlsx');
         const data = await response.arrayBuffer();
         const workbook = XLSX.read(data, { type: 'array' });
         const sheet = workbook.Sheets[workbook.SheetNames[0]];
