@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <title>Fragebogen Upload</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <style>
     body { font-family: sans-serif; max-width: 600px; margin: auto; padding: 20px; }
     .frage { display: none; margin-bottom: 20px; }
@@ -32,18 +33,11 @@
       "Gibt es weitere relevante Dokumente, die Sie einreichen möchten?"
     ];
 
-    const uploads = {
-      "alf.gerstmayr@gmail.com": "https://ppmg365-my.sharepoint.com/:f:/g/personal/alfred_gerstmayr_ppmg_at/EqRiTBirCuRLqUt1OEuweSMB5DxHvgAbHWB8nQEY5FwLVA",
-      "alfred.gerstmayr@outlook.com": "https://ppmg365-my.sharepoint.com/:f:/g/personal/alfred_gerstmayr_ppmg_at/EoJ78FxRbC5OtL1YoipHKQIB9yjDnn8yGUvmgSmvUb7zMg",
-      "irmgard.etl@gmx.at": "https://ppmg365-my.sharepoint.com/:f:/g/personal/alfred_gerstmayr_ppmg_at/EimXnRVO5bBEjiTkrjg-ASkBP2cvzG2ytp-g4WhM_YO5ow"
-      // weitere Einträge hier einfügen
-    };
-
     const urlParams = new URLSearchParams(window.location.search);
     const user = urlParams.get('user');
-    const uploadUrl = uploads[user];
 
     let aktuelleFrage = 0;
+    let uploadUrl = null;
 
     const container = document.getElementById('frage-container');
     const uploadLinkDiv = document.getElementById('upload-link');
@@ -85,7 +79,26 @@
       zeigeFrage();
     }
 
-    zeigeFrage();
+    async function ladeUploadLinks() {
+      try {
+        const response = await fetch('Empfaenger-Upload-Links.xlsx');
+        const data = await response.arrayBuffer();
+        const workbook = XLSX.read(data, { type: 'array' });
+        const sheet = workbook.Sheets[workbook.SheetNames[0]];
+        const json = XLSX.utils.sheet_to_json(sheet);
+
+        const eintrag = json.find(row => row.Email?.trim().toLowerCase() === user?.trim().toLowerCase());
+        if (eintrag && eintrag.Link) {
+          uploadUrl = eintrag.Link;
+        }
+        zeigeFrage();
+      } catch (err) {
+        console.error('Fehler beim Laden der Upload-Liste:', err);
+        container.innerHTML = '<p>Fehler beim Laden der Upload-Tabelle.</p>';
+      }
+    }
+
+    ladeUploadLinks();
   </script>
 </body>
 </html>
